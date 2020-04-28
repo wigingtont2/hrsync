@@ -60,12 +60,12 @@ fi
 # Do real synchronization.
 if [ "$3" == "yes" ]
 then
-    rsync --archive --one-filesystem --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
-else
     # If our target is already up-to-date or partially up-to-date, just update the remote timestamps.
     # I suspect this will cause issues if the source file is the same size, but has changed content,
     # but I think you could just run a normal sync after to pick up such differences.
-    rsync --size-only --times --archive --one-filesystem --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
+    rsync --size-only --times --archive --one-file-system --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
+else
+    rsync --archive --one-file-system --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
 fi
 
 status=$?
