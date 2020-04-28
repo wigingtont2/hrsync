@@ -1,24 +1,23 @@
 #!/usr/bin/env bash
 
 # hrsync by Daniele Paroli
+# With minor modifications by Tanner Wigington.
 #
-# simple script to backup a directory with rsync detecting moved and renamed files
+# Simple script to backup a directory with rsync detecting moved and renamed files.
 #
-# use it at your own risk, please see README and LICENSE files
+# Use it at your own risk, please see README and LICENSE files.
 
 # ------------------------------------------------------------
-# Backup source and target directory 
+# Backup source and target directory.
 
 Source="${1%/}"
 Target="${2%/}"
-TargetHost=$3
 
 # ------------------------------------------------------------
-# Name of shadow directory
+# Name of shadow directory.
 Shadow=".rsync_shadow"
 
-
-# Start doing things
+# Start doing things.
 
 if [ "${Source:0:1}" != / ]
 then
@@ -36,49 +35,31 @@ if [ -z "$2" ]
 then
 	echo "Usage:"
 	echo "	hrsync source target"
-	echo "	hrsync source target remoteHost"
 	echo "Example:"
 	echo "	hrsync /home/user/Documents /mnt/external/Documents"
-	echo "	hrsync /home/user/Documents /root/Documents root@example.com"
 	echo "Please see the README file"
-
 	exit 0
 fi
 
-
-if [ ! -d "$Source/$Shadow" ] 
+if [ ! -d "$Source/$Shadow" ]
 then
-	# first time run: create source shadow
+	# First time run: create source shadow.
 	rsync --archive --delete --progress --link-dest="$Source" --exclude="/$Shadow" "$Source"/ "$Source/$Shadow"
 fi
 
-# do real syncronization
-if [ -z "$3" ]
-then
-	# local version
-	# add --size-only --times if it tries to transfer everything
-	rsync --archive --one-filesystem --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
-else
-	# remote version
-	rsync -axXhHv --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ $TargetHost:"'$Target'"
-fi
+# Do real synchronization.
+# Adding --size-only --times may helf if it tries to transfer everything.
+rsync --archive --one-filesystem --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
 
 status=$?
 
 if [ $status -eq 0 ]
 then
-	#update source shadow directory
+	# Update source shadow directory.
 	rsync --archive --delete --progress --link-dest="$Source" --exclude="/$Shadow" "$Source"/ "$Source/$Shadow"
 
-	#update target shadow directory
-	if [ -z "$3" ]
-	then
-		# local version
-		rsync --archive --delete --progress --link-dest="$Target" --exclude="/$Shadow" "$Target/" "$Target/$Shadow"
-	else
-		# remote version
-		ssh $TargetHost "rsync -a --delete --link-dest='$Target' --exclude='/$Shadow' '$Target/' '$Target/$Shadow'"
-	fi
+	# Update target shadow directory.
+	rsync --archive --delete --progress --link-dest="$Target" --exclude="/$Shadow" "$Target/" "$Target/$Shadow"
 fi
 
 exit $status
