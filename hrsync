@@ -49,14 +49,15 @@ fi
 if [ ! -d "$Source/$Shadow" ] 
 then
 	# first time run: create source shadow
-	rsync -a --delete --link-dest="$Source" --exclude="/$Shadow" "$Source"/ "$Source/$Shadow"
+	rsync --archive --delete --progress --link-dest="$Source" --exclude="/$Shadow" "$Source"/ "$Source/$Shadow"
 fi
 
 # do real syncronization
 if [ -z "$3" ]
 then
 	# local version
-	rsync -axXhHv --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
+	# add --size-only --times if it tries to transfer everything
+	rsync --archive --one-filesystem --xattrs --human-readable --hard-links --verbose --progress --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ "$Target"
 else
 	# remote version
 	rsync -axXhHv --stats --no-inc-recursive --numeric-ids --delete --delete-after "$Source"/ $TargetHost:"'$Target'"
@@ -67,13 +68,13 @@ status=$?
 if [ $status -eq 0 ]
 then
 	#update source shadow directory
-	rsync -a --delete --link-dest="$Source" --exclude="/$Shadow" "$Source"/ "$Source/$Shadow"
+	rsync --archive --delete --progress --link-dest="$Source" --exclude="/$Shadow" "$Source"/ "$Source/$Shadow"
 
 	#update target shadow directory
 	if [ -z "$3" ]
 	then
 		# local version
-		rsync -a --delete --link-dest="$Target" --exclude="/$Shadow" "$Target/" "$Target/$Shadow"
+		rsync --archive --delete --progress --link-dest="$Target" --exclude="/$Shadow" "$Target/" "$Target/$Shadow"
 	else
 		# remote version
 		ssh $TargetHost "rsync -a --delete --link-dest='$Target' --exclude='/$Shadow' '$Target/' '$Target/$Shadow'"
